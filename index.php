@@ -1,34 +1,47 @@
 <?php
+ini_set('MAX_EXECUTION_TIME', 3600);
 include 'simple_html_dom.php';
 // Create DOM from URL
 // $html = file_get_html('http://www.rusprofile.ru/codes/711230/37/');
 $urls = [];
-for ($i=1; $i < 29; $i++) { 
+for ($i=20; $i <= 28; $i++) { 
 	$strr = strval($i);
 	$url = "http://www.rusprofile.ru/codes/711230/" . $strr . "/";
 	array_push($urls, $url);
 }
-
-	$code = get_html_code_url("http://www.rusprofile.ru/codes/711230"); // Скачиваю код страницы
+foreach ($urls as $key) {
+	$code = get_html_code_url($key); // Скачиваю код страницы
 	$html = str_get_html($code);
 	foreach($html->find('div.u-frame') as $article) {
-	    $item['address']     = $article->find('div.u-address', 0)->plaintext;
-	    $item['name']     = $article->find('span.und', 0)->plaintext;
 	    $item_href     = $article->find('a.u-name', 0)->href;
-	    $item_href = "http://www.rusprofile.ru" . $item_href;
-	    $item['href'] = $item_href;
+	    $item['href'] = "http://www.rusprofile.ru" . $item_href;
 	    $articles[] = $item;
+	}
+}
+foreach ($articles as $key) {
+	$code = get_html_code_url($key["href"]); // Скачиваю код страницы
+	$html = str_get_html($code);
+	foreach($html->find('div.main-block') as $article) {
+	    $item['name']     = $article->find('h1[itemprop="name"]', 0)->plaintext;
+	    $item['value']     = $article->find('span.acc-value', 0)->plaintext;
+	    if ($article->find('link[itemprop="url"]', 0)) {
+	    	$item['href']     = $article->find('link[itemprop="url"]', 0)->href;
+	    } else {
+	    	$item['href'] = null;
+	    }
+	    $item['address_reg']     = $article->find('span[itemprop="addressRegion"]', 0)->plaintext;
+	    $item['address_str']     = $article->find('span[itemprop="streetAddress"]', 0)->plaintext;
 	    print_r($item['name']);
 	    print_r("; ");
-	    print_r($item['address']);
+	    print_r($item['address_reg']);
+		print_r($item['address_str']);
+	    print_r("; ");
+	    print_r($item['value']);
 	    print_r("; ");
 	    print_r($item['href']);
 	    print_r("<br>");
 	}
-
-// print_r(var_dump($articles));
-
-
+}
 function get_html_code_url($url) {
     $curl = curl_init(); // Инициализирую CURL
     curl_setopt($curl, CURLOPT_HEADER, 0); // Отключаю в выводе header-ы
